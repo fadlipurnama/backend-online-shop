@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## Live Link
 
 You can access the live application at [https://e-shopit.vercel.app/](https://e-shopit.vercel.app/).
@@ -51,3 +52,6 @@ The frontend of the application is built with ReactJS, Material UI, React-router
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+=======
+# backend-online-shop
+>>>>>>> d4e01f90da97c1b488d3a706eecd60b0201aa75b
