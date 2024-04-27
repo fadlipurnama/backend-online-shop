@@ -3,7 +3,7 @@ const router = express.Router();
 const Product = require('../models/Product')
 
 // to fetch all products
-router.get('/fetchproduct', async (req, res) => {
+router.get('/fetchProduct', async (req, res) => {
     try {
 
         const product = await Product.find()
@@ -15,7 +15,7 @@ router.get('/fetchproduct', async (req, res) => {
     }
 })
 // To get Single product
-router.get('/fetchproduct/:id', async (req, res) => {
+router.get('/fetchProduct/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id)
         
@@ -35,7 +35,7 @@ router.post('/fetchproduct/type', async (req, res) => {
     }
 })
 // to get products category wise
-router.post('/fetchproduct/category', async (req, res) => {
+router.post('/fetchProduct/category', async (req, res) => {
     const { userType, userCategory } = req.body
     try {
         if (userCategory == "all") {

@@ -2,22 +2,53 @@ const jwt = require("jsonwebtoken");
 const dotenv = require('dotenv');
 dotenv.config()
 
+// const fetchUser = (req, res, next) => {
+//     // get the user from the jwt token and id to req objectPosition: 
+//     const token = req.header('Authorization');
+//     if (!token) {
+//         return res.status(400).send("Access denied" )
+//     }
+//     try {
+//         const data = jwt.verify(token, process.env.JWT_SECRET)
+//         req.user = data.user
+//         next()
+//     } catch (error) {
+//         res.status(400).send( "Access denied" )
+
+//     }
+
+
+// }
+
+// module.exports = fetchUser
+
+
 const fetchUser = (req, res, next) => {
-    // get the user from the jwt token and id to req objectPosition: 
-    const token = req.header('Authorization');
-    if (!token) {
-        return res.status(400).send("Access denied" )
+    // Get the token from the authorization header
+    const authHeader = req.header('Authorization');
+
+    // Check if token exists
+    if (!authHeader) {
+        return res.status(401).json({ message: "Access denied. No token provided." });
     }
+
+    // Check if token has the correct format
+    const tokenParts = authHeader.split(' ');
+    if (tokenParts.length !== 2 || tokenParts[0] !== 'Bearer') {
+        return res.status(401).json({ message: "Invalid token format." });
+    }
+
+    // Extract the token
+    const token = tokenParts[1];
+
     try {
-        const data = jwt.verify(token, process.env.JWT_SECRET)
-        req.user = data.user
-        next()
+        // Verify the token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded.user;
+        next();
     } catch (error) {
-        res.status(400).send( "Access denied" )
-
+        return res.status(401).json({ message: "Invalid token." });
     }
-
-
 }
 
-module.exports = fetchUser
+module.exports = fetchUser;

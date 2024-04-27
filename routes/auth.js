@@ -14,15 +14,15 @@ let success = false;
 router.post(
   "/register",
   [
-    body("firstName", "Enter a valid name").isLength({ min: 1 }),
-    body("lastName", "Enter a valid name").isLength({ min: 1 }),
-    body("email", "Enter a valid email").isEmail(),
-    body("password", "Password must be at least 5 characters").isLength({
+    body("firstName", "Masukan nama depan yang valid").isLength({ min: 1 }),
+    body("lastName", "Masukan nama belakang yang valid").isLength({ min: 1 }),
+    body("email", "Masukan alamat email yang valid").isEmail(),
+    body("password", "Password setidaknya berisi 5 karakter").isLength({
       min: 5,
     }),
-    body("phoneNumber", "Enter a valid phone number").isLength({
+    body("phoneNumber", "Masukan nomor telepon yang valid").isLength({
       min: 10,
-      max: 10,
+      max: 12,
     }),
   ],
   async (req, res) => {
@@ -39,7 +39,9 @@ router.post(
         $or: [{ email: email }, { phoneNumber: phoneNumber }],
       });
       if (user) {
-        return res.status(400).send({ error: "Sorry a user already exists" });
+        return res
+          .status(400)
+          .send({ error: "Maaf, alamat email atau password telah terdaftar" });
       }
 
       // password hashing
@@ -61,10 +63,14 @@ router.post(
         },
       };
       success = true;
+      message = "Registrasi berhasil";
       const authToken = jwt.sign(data, process.env.JWT_SECRET);
-      res.send({ success, authToken });
+      res.send({ success, authToken, message });
     } catch (error) {
-      console.error("Error while creating/saving user:", error);
+      console.error(
+        "Kesalahan saat pembuatan atau penyimpanan pengguna:",
+        error
+      );
       res.status(500).send("Internal server error");
     }
   }
@@ -80,23 +86,19 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ error: errors.array() });
+      const message = errors.array();
+      return res.status(400).json({ error: [ ...message ] });
     }
 
     const { email, password } = req.body;
     try {
       let user = await User.findOne({ email });
       if (!user) {
-        return res.status(400).send({ success, error: "User not found" });
+        return res.status(401).json({ error: "User not found" });
       }
       const passComp = await bcrypt.compare(password, user.password);
       if (!passComp) {
-        return res
-          .status(400)
-          .send({
-            success,
-            error: "Please try to login with correct credentials",
-          });
+        return res.status(401).json({ error: "Incorrect password" });
       }
 
       const data = {
@@ -106,16 +108,16 @@ router.post(
       };
 
       const authToken = jwt.sign(data, process.env.JWT_SECRET);
-      success = true;
-      res.send({ success, authToken });
+      res.json({ authToken });
     } catch (error) {
-      res.status(500).send("Internal server error002");
+      res.status(500).send("Internal server error");
     }
   }
 );
+
 // logged in user details
 
-router.get("/getuser", authUser, async (req, res) => {
+router.get("/getUser", authUser, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
     success = true;
@@ -127,7 +129,7 @@ router.get("/getuser", authUser, async (req, res) => {
 });
 
 // update user details
-router.put("/updateuser", authUser, async (req, res) => {
+router.put("/updateUser", authUser, async (req, res) => {
   const { userDetails } = req.body;
   let convertData = JSON.parse(userDetails);
   try {

@@ -13,13 +13,13 @@ dotenv.config()
 
 let success = false
 let adminKey = process.env.ADMIN_KEY
-router.get('/getusers', authAdmin, getAllUsersInfo);
-router.get('/geteuser/:userId', authAdmin, getSingleUserInfo);
-router.get('/getcart/:userId', authAdmin, getUserCart);
-router.get('/getwishlist/:userId', authAdmin, getUserWishlist);
-router.get('/getreview/:userId', authAdmin, getUserReview);
-router.get('/getorder/:id', authAdmin, userPaymentDetails);
-router.get('/chartdata', chartData);
+router.get('/getUsers', authAdmin, getAllUsersInfo);
+router.get('/getUser/:userId', authAdmin, getSingleUserInfo);
+router.get('/getCart/:userId', authAdmin, getUserCart);
+router.get('/getWishlist/:userId', authAdmin, getUserWishlist);
+router.get('/getReview/:userId', authAdmin, getUserReview);
+router.get('/getOrder/:id', authAdmin, userPaymentDetails);
+router.get('/chartData', chartData);
 
 router.post('/login', [
     body('email', 'Enter a valid email').isEmail(),
@@ -127,9 +127,9 @@ router.put('/updateproduct/:id', authAdmin, updateProductDetails)
 
 
 router.delete('/review/:id', authAdmin, deleteUserReview);
-router.delete('/usercart/:id', authAdmin, deleteUserCartItem);
-router.delete('/userwishlist/:id', authAdmin, deleteUserWishlistItem);
-router.delete('/deleteproduct/:id', authAdmin, deleteProduct);
+router.delete('/userCart/:id', authAdmin, deleteUserCartItem);
+router.delete('/userWishlist/:id', authAdmin, deleteUserWishlistItem);
+router.delete('/deleteProduct/:id', authAdmin, deleteProduct);
 
 
 module.exports = router
