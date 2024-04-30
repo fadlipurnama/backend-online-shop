@@ -80,25 +80,25 @@ router.post(
 router.post(
   "/login",
   [
-    body("email", "Enter a valid email").isEmail(),
-    body("password", "Password cannot be blank").exists(),
+    body("email", "Masukan nama depan yang valid").isEmail(),
+    body("password", "Password tidak boleh kosong").exists(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       const message = errors.array();
-      return res.status(400).json({ error: [ ...message ] });
+      return res.status(400).json({ error: [...message] });
     }
 
     const { email, password } = req.body;
     try {
       let user = await User.findOne({ email });
       if (!user) {
-        return res.status(401).json({ error: "User not found" });
+        return res.status(401).json({ error: "Pengguna tidak ditemukan" });
       }
       const passComp = await bcrypt.compare(password, user.password);
       if (!passComp) {
-        return res.status(401).json({ error: "Incorrect password" });
+        return res.status(401).json({ error: "Kata sandi salah" });
       }
 
       const data = {
@@ -107,7 +107,9 @@ router.post(
         },
       };
 
-      const authToken = jwt.sign(data, process.env.JWT_SECRET);
+      const authToken = jwt.sign(data, process.env.JWT_SECRET, {
+        expiresIn: "30m",
+      });
       res.json({ authToken });
     } catch (error) {
       res.status(500).send("Internal server error");
@@ -116,13 +118,12 @@ router.post(
 );
 
 // logged in user details
-
 router.get("/getUser", authUser, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
     success = true;
     res.send(user);
-    console.log(user.city);
+    console.log(`${user.firstName} telah login, isAdmin: ${user.isAdmin}`);
   } catch (error) {
     res.status(400).send("Something went wrong");
   }
@@ -141,7 +142,7 @@ router.put("/updateUser", authUser, async (req, res) => {
       success = true;
       res.status(200).send({ success });
     } else {
-      return res.status(400).send("User Not Found");
+      return res.status(400).send("Pengguna tidak ditemukan");
     }
   } catch (error) {
     res.send("Something went wrong");

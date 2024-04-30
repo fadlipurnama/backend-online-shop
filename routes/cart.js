@@ -16,7 +16,6 @@ router.get("/fetchCart", authUser, async (req, res) => {
 });
 
 // add to cart
-
 router.post("/addCart", authUser, async (req, res) => {
     try {
         const { _id, quantity } = req.body;

@@ -3,7 +3,7 @@ const router = express.Router();
 const Review = require('../models/Review')
 const authUser = require('../middleware/authUser')
 
-router.post('/fetchreview/:id', async (req, res) => {
+router.post('/fetchReview/:id', async (req, res) => {
     const { filterType } = req.body
     try {
         if (filterType === 'all') {

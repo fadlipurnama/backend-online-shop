@@ -53,5 +53,5 @@ app.use('/api/admin', AdminRoute)
 app.use('/api/password', forgotPassword)
 
 app.listen(port, () => {
-    console.log(`E-commerce backend listening at http://localhost:${port}`)
+    console.log(`Server berjalan di port:${port}`)
 })
