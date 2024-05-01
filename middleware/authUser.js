@@ -1,9 +1,9 @@
 const jwt = require("jsonwebtoken");
-const dotenv = require('dotenv');
-dotenv.config()
+const dotenv = require("dotenv");
+dotenv.config();
 
 // const fetchUser = (req, res, next) => {
-//     // get the user from the jwt token and id to req objectPosition: 
+//     // get the user from the jwt token and id to req objectPosition:
 //     const token = req.header('Authorization');
 //     if (!token) {
 //         return res.status(400).send("Access denied" )
@@ -17,38 +17,41 @@ dotenv.config()
 
 //     }
 
-
 // }
 
 // module.exports = fetchUser
 
-
 const fetchUser = (req, res, next) => {
-    // Get the token from the authorization header
-    const authHeader = req.header('Authorization');
+  // Get the token from the authorization header
+  const authHeader = req.header("Authorization");
 
-    // Check if token exists
-    if (!authHeader) {
-        return res.status(401).json({ message: "Access denied. No token provided." });
-    }
+  // Check if token exists
+  if (!authHeader) {
+    console.log("authHeade: ", authHeader);
+    return res
+      .status(401)
+      .json({ message: "Access denied. No token provided." });
+  }
 
-    // Check if token has the correct format
-    const tokenParts = authHeader.split(' ');
-    if (tokenParts.length !== 2 || tokenParts[0] !== 'Bearer') {
-        return res.status(401).json({ message: "Invalid token format." });
-    }
+  // Check if token has the correct format
+  const tokenParts = authHeader.split(" ");
+  if (tokenParts.length !== 2 || tokenParts[0] !== "Bearer") {
+    console.log("401 authUser Middleware tokenParts:", tokenParts);
+    return res.status(401).json({ message: "Invalid token format." });
+  }
 
-    // Extract the token
-    const token = tokenParts[1];
+  // Extract the token
+  const token = tokenParts[1];
 
-    try {
-        // Verify the token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded.user;
-        next();
-    } catch (error) {
-        return res.status(401).json({ message: "Invalid token." });
-    }
-}
+  try {
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded.userId;
+    next();
+} catch (error) {
+    console.log("401 authUser Middleware: ", error)
+    return res.status(401).json({ message: "Invalid token." });
+  }
+};
 
 module.exports = fetchUser;

@@ -4,6 +4,7 @@ const Wishlist = require("../models/Wishlist");
 const Review = require("../models/Review");
 const Product = require("../models/Product");
 const Payment = require("../models/Payment");
+
 let success = false;
 const getAllUsersInfo = async (req, res) => {
     try {
@@ -15,6 +16,7 @@ const getAllUsersInfo = async (req, res) => {
         res.status(400).send("Something went wrong")
     }
 }
+
 const getSingleUserInfo = async (req, res) => {
     const { userId } = req.params;
     const findUser = await User.findById(userId)
