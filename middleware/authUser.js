@@ -27,17 +27,19 @@ const fetchUser = (req, res, next) => {
 
   // Check if token exists
   if (!authHeader) {
-    console.log("authHeade: ", authHeader);
+    console.log("authHeader: ", authHeader);
     return res
       .status(401)
-      .json({ message: "Access denied. No token provided." });
+      .json({ success: false, error: "Access denied. No token provided." });
   }
 
   // Check if token has the correct format
   const tokenParts = authHeader.split(" ");
   if (tokenParts.length !== 2 || tokenParts[0] !== "Bearer") {
     console.log("401 authUser Middleware tokenParts:", tokenParts);
-    return res.status(401).json({ message: "Invalid token format." });
+    return res
+      .status(401)
+      .json({ success: false, error: "Invalid token format." });
   }
 
   // Extract the token
@@ -48,9 +50,9 @@ const fetchUser = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded.userId;
     next();
-} catch (error) {
-    console.log("401 authUser Middleware: ", error)
-    return res.status(401).json({ message: "Invalid token." });
+  } catch (error) {
+    console.log("401 authUser Middleware: ", error);
+    return res.status(401).json({ success: false, error: "Invalid token." });
   }
 };
 

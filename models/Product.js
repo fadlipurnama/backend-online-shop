@@ -2,18 +2,52 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 const ProductSchema = new Schema(
   {
-    name: String,
-    brand: String,
-    price: Number,
-    category: String,
-    imageUrl: String,
-    rating: Number,
-    author: String,
-    description: String,
-    stock: Number,
-    promo: {
+    name: {
+      type: String,
+      required: true,
+    },
+    brand: {
+      required: true,
+      type: String,
+    },
+    price: {
+      required: true,
+      type: Number,
+    },
+    best: {
       default: false,
       type: Boolean,
+    },
+    category: {
+      required: true,
+      type: String,
+    },
+    imageUrl: {
+      required: true,
+      type: String,
+    },
+    author: {
+      required: true,
+      type: String,
+    },
+    description: {
+      required: true,
+      type: String,
+    },
+    stock: {
+      required: true,
+      type: Number,
+    },
+    rating: {
+      default: 0,
+      type: Number,
+    },
+    discount: {
+      default: 0,
+      type: Number,
+    },
+    labelPromo: {
+      type: String,
     },
     isActive: {
       default: true,

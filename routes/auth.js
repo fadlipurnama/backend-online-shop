@@ -26,13 +26,17 @@ function generateRandomUsername(length) {
 router.post(
   "/register",
   [
-    body("firstName", "Masukan nama depan yang valid").isLength({ min: 1 }),
-    body("lastName", "Masukan nama belakang yang valid").isLength({ min: 1 }),
-    body("email", "Masukan alamat email yang valid").isEmail(),
+    body("firstName", "Mohon Masukkan nama depan terlebih dahulu").isLength({
+      min: 1,
+    }),
+    body("lastName", "Masukkan nama belakang terlebih dahulu").isLength({
+      min: 1,
+    }),
+    body("email", "Masukkan alamat email yang valid").isEmail(),
     body("password", "Password setidaknya berisi 5 karakter").isLength({
       min: 5,
     }),
-    body("phoneNumber", "Masukan nomor telepon yang valid").isLength({
+    body("phoneNumber", "Masukan nomor telepon").isLength({
       min: 10,
       max: 12,
     }),
@@ -93,12 +97,19 @@ router.post(
 router.post(
   "/login",
   [
-    body("email", "Masukan alamat email yang valid").optional().isEmail(),
+    body("email", "Mohon tuliskan alamat email dengan benar")
+      .optional()
+      .isEmail(),
     body("phoneNumber", "Masukan nomor No.Handphone yang valid").optional(),
-    body("password", "Password tidak boleh kosong").exists().trim(),
+    body("password", "Mohon masukkan kata sandi terlebih dahulu")
+      .exists()
+      .isLength({
+        min: 1,
+      }),
   ],
   async (req, res) => {
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
       console.log(errors.array());
       return res.status(400).json({
@@ -122,7 +133,7 @@ router.post(
       if (!user) {
         return res.status(401).json({
           success: false,
-          error: "Pengguna tidak ditemukan",
+          error: "Email yang anda masukkan salah",
         });
       }
 
@@ -137,7 +148,7 @@ router.post(
 
       // Buat token JWT untuk user yang berhasil login
       const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-        expiresIn: "30m",
+        expiresIn: "60m",
       });
 
       return res.json({
@@ -200,7 +211,7 @@ router.put("/updateUser", authUser, async (req, res) => {
     }
 
     // Kirim respons sukses bersama dengan data pengguna yang diperbarui
-    return res.status(200).json({ success: true, user: updatedUser });
+    return res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
     console.error("Kesalahan saat memperbarui pengguna:", error);
     return res.status(500).json({

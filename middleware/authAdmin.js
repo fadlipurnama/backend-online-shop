@@ -1,30 +1,32 @@
 const jwt = require("jsonwebtoken");
-const dotenv = require('dotenv');
-const User = require('../models/User.js')
-dotenv.config()
+const dotenv = require("dotenv");
+const User = require("../models/User.js");
+dotenv.config();
 
 const checkAdmin = async (req, res, next) => {
-    // get the user from the jwt token and id to req objectPosition: 
-    const token = req.header('Authorization');
-    if (!token) {
-        return res.status(401).send("Access denied")
+  const authHeader = req.header("Authorization");
+  if (!authHeader) {
+    console.error("Authorization header not found");
+    return res.status(401).send({ message: "Akses ditolak", success: false });
+  }
+
+  const token = authHeader.replace("Bearer ", "");
+
+  try {
+    const data = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = data.userId;
+
+    const checkAdmin = await User.findById(req.user);
+    if (checkAdmin && checkAdmin.isAdmin) {
+      next();
+    } else {
+      console.error("Pengguna bukan admin");
+      res.status(401).send({ message: "Tidak memiliki akses", success: false });
     }
-    try {
-        const data = jwt.verify(token, process.env.JWT_SECRET)
-        req.user = data.user
-        const checkAdmin = await User.findById(req.user.id)
-        if (checkAdmin.isAdmin == true) {
-            next()
-        }
-        else {
-            res.status(401).send("Access denied")
-        }
-    } catch (error) {
-        res.status(401).send("Access denied")
+  } catch (error) {
+    console.error("Verifikasi token gagal:", error);
+    res.status(401).send({message: "Verifikasi token gagal", success: false});
+  }
+};
 
-    }
-
-
-}
-
-module.exports = checkAdmin
+module.exports = checkAdmin;
