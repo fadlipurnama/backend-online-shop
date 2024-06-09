@@ -10,6 +10,7 @@ const wishlist = require("./routes/wishlist");
 const category = require("./routes/category");
 const banner = require("./routes/banner");
 const product = require("./routes/product");
+const order = require("./routes/orderStatus");
 const review = require("./routes/review");
 // const paymentRoute = require('./routes/paymentRoute')
 const forgotPassword = require("./routes/forgotPassword");
@@ -30,6 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.json());
 app.use(cors());
+
 app.use(express.static(path.join(__dirname, "build")));
 
 app.use(checkOrigin);
@@ -46,19 +48,18 @@ app.use("/api/cart", cart);
 
 app.use("/api/wishlist", wishlist);
 
+app.use("/api/oder", order);
+
 app.use("/api/review", review);
 
 app.use("/api/admin", AdminRoute);
 
 // app.use('/api', paymentRoute)
 
-app.use("/images", express.static(path.join(__dirname, "assets/images")));
+app.use("/api/assets/", express.static(path.join(__dirname, "assets/")));
 
 app.use("/api/password", forgotPassword);
 
 app.listen(port, () => {
   console.log(`Server berjalan di port:${port}`);
 });
-
-
-

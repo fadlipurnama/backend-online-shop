@@ -5,35 +5,31 @@ const Category = require("../models/Category");
 const authAdmin = require("../middleware/authAdmin");
 const fs = require("fs");
 const path = require("path");
-const images = require("../middleware/images");
+const { images, processImage } = require("../middleware/images");
 
-// router.use((req, res, next) => {
-//   const protocol = req.protocol;
-//   const host = req.get("host");
-//   req.baseUrl = `${protocol}://${host}`;
-//   next();
-// });
 
 // Create Category
 router.post(
   "/createCategory",
   images.single("imageUrl"),
+  processImage,
   body("name", "Nama category wajib diisi").notEmpty(),
   body("author", "Penulis wajib diisi").notEmpty(),
   body("isActive", "Status category produk wajib diisi").notEmpty(),
   async (req, res) => {
     const errors = validationResult(req);
+    const protocol = req.protocol;
+    const host = req.get("host");
+
     if (!errors.isEmpty()) {
       const error = errors.array()[0].msg;
       console.log(error);
       return res.status(400).json({ success: false, error });
     }
 
-    const protocol = req.protocol;
-    const host = req.get("host");
     const { name, author, isActive } = req.body;
     const imageUrl = req.file
-      ? `${protocol}://${host}/images/${req.file.filename}`
+      ? `${protocol}://${host}/api/assets/images/categories${req.file.filename}`
       : "";
 
     console.log("file gambar category: ", req.file);
@@ -154,7 +150,7 @@ router.delete("/deleteCategory/:id", async (req, res) => {
       const imageUrl = new URL(deletedCategory.imageUrl);
       const imagePath = path.resolve(
         __dirname,
-        "../assets/images",
+        "../assets/images/categories",
         path.basename(imageUrl.pathname)
       );
       console.log("image path", imagePath);

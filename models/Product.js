@@ -53,6 +53,19 @@ const ProductSchema = new Schema(
       default: true,
       type: Boolean,
     },
+    netWeight: {
+      type: String,
+      required: true,
+    },
+    serialNumber: {
+      type: String,
+      required: true,
+    },
+    ratedVoltage: {
+      type: String,
+      required: true,
+    },
+  
   },
   { timestamps: true }
 );

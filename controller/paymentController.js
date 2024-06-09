@@ -182,7 +182,7 @@ const paymentVerification = async (req, res) => {
               <p>${userData.firstName} ${userData.lastName}</p>
               <p>${userData.address}</p>
               <p>${userData.city}-${userData.zipCode}</p>
-              <p>${userData.userState}</p>
+              <p>${userData.province}</p>
             </div>
             <p class="thanks">Thank you for choosing our website. If you have any questions or concerns, please don't hesitate to contact us.</p>
             <div class="signature">
@@ -301,7 +301,7 @@ const paymentVerification = async (req, res) => {
               <p>${userData.firstName} ${userData.lastName}</p>
               <p>${userData.address}</p>
               <p>${userData.city}-${userData.zipCode}</p>
-              <p>${userData.userState}</p>
+              <p>${userData.province}</p>
             </div>
             <p class="thanks">Thank you for choosing our website. If you have any questions or concerns, please don't hesitate to contact us.</p>
             <div class="signature">

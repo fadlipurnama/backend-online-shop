@@ -9,19 +9,6 @@ const dotenv = require("dotenv");
 const { deleteAllUserData } = require("../controller/deleteUser");
 dotenv.config();
 
-function generateRandomUsername(length) {
-  const characters =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let randomUsername = "";
-
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    randomUsername += characters.charAt(randomIndex);
-  }
-
-  return randomUsername;
-}
-
 // create a user :post "/auth",!auth
 router.post(
   "/register",
@@ -69,7 +56,6 @@ router.post(
         lastName,
         email,
         phoneNumber: String(phoneNumber),
-        username: generateRandomUsername(9),
         password: secPass,
         isAdmin,
       });
@@ -186,31 +172,49 @@ router.get("/getDetailUser", authUser, async (req, res) => {
 });
 
 // update user details
+// Ganti dengan path ke middleware authUser Anda
+
 router.put("/updateUser", authUser, async (req, res) => {
-  const updateData = req.body;
-  const userId = req.user; // Gunakan req.user sebagai ID pengguna
+  const { username, ...updateData } = req.body;
+  const userId = req.user;
 
   try {
-    // Temukan pengguna berdasarkan ID
     const user = await User.findById(userId);
     if (!user) {
       console.error("User tidak ditemukan:", userId);
-      return res
-        .status(400)
-        .json({ success: false, error: "Pengguna tidak ditemukan" });
+      return res.status(400).json({ success: false, error: "Pengguna tidak ditemukan" });
     }
 
-    // Lakukan pembaruan data pengguna
-    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
-      new: true,
-    });
+    if (username) {
+      const usernameRegex = /^[a-zA-Z0-9_]+$/;
+      if (!usernameRegex.test(username)) {
+        return res.status(400).json({
+          success: false,
+          error: "Username hanya boleh berisi huruf, angka, dan underscore (_)",
+        });
+      }
+
+      if (username.length < 6 || username.length > 10) {
+        return res.status(400).json({
+          success: false,
+          error: "Panjang username minimal 6 - 10 karakter",
+        });
+      }
+
+      const existingUser = await User.findOne({ username });
+      if (existingUser) {
+        return res.status(400).json({ success: false, error: "Username sudah digunakan" });
+      }
+
+      updateData.username = username;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
+
     if (!updatedUser) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Gagal memperbarui pengguna" });
+      return res.status(400).json({ success: false, error: "Gagal memperbarui pengguna" });
     }
 
-    // Kirim respons sukses bersama dengan data pengguna yang diperbarui
     return res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
     console.error("Kesalahan saat memperbarui pengguna:", error);
@@ -220,6 +224,51 @@ router.put("/updateUser", authUser, async (req, res) => {
     });
   }
 });
+
+
+router.put(
+  "/change-password",
+  authUser,
+  [
+    body("oldPassword", "Masukkan kata sandi lama Anda").exists(),
+    body("newPassword", "Password baru setidaknya berisi 5 karakter").isLength({
+      min: 5,
+    }),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ success: false, error: errors.array()[0].msg });
+    }
+
+    const { oldPassword, newPassword } = req.body;
+    try {
+      const user = await User.findById(req.user);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Pengguna tidak ditemukan" });
+      }
+
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Password lama tidak cocok" });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+      await user.save();
+
+      res.json({ success: true, message: "Password berhasil diubah" });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  }
+);
 
 // delete user and user data
 router.delete("/delete/user/:userId", authUser, deleteAllUserData);

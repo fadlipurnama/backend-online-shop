@@ -23,7 +23,7 @@ const UserSchema = new Schema(
     },
     username: {
       type: String,
-      required: true,
+      sparse: true,
       unique: true,
     },
     password: {
@@ -43,7 +43,10 @@ const UserSchema = new Schema(
     city: {
       type: String,
     },
-    userState: {
+    country: {
+      type: String,
+    },
+    province: {
       type: String,
     },
   },
