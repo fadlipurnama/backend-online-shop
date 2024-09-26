@@ -10,8 +10,10 @@ const wishlist = require("./routes/wishlist");
 const category = require("./routes/category");
 const banner = require("./routes/banner");
 const product = require("./routes/product");
-const order = require("./routes/orderStatus");
-const review = require("./routes/review");
+const transaction = require("./routes/transaction");
+const order = require("./routes/order");
+// const review = require("./routes/review");
+const shipment = require("./routes/shipment");
 // const paymentRoute = require('./routes/paymentRoute')
 const forgotPassword = require("./routes/forgotPassword");
 const AdminRoute = require("./routes/Admin/AdminAuth");
@@ -48,11 +50,14 @@ app.use("/api/cart", cart);
 
 app.use("/api/wishlist", wishlist);
 
-app.use("/api/oder", order);
+app.use("/api/order", order);
 
-app.use("/api/review", review);
+// app.use("/api/review", review);
 
 app.use("/api/admin", AdminRoute);
+
+app.use("/api/shipment", shipment);
+app.use("/api/transaction", transaction);
 
 // app.use('/api', paymentRoute)
 

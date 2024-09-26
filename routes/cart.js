@@ -61,7 +61,7 @@ router.get("/getDataCart", authUser, async (req, res) => {
     // Mengambil semua item dalam keranjang untuk pengguna yang sedang diautentikasi
     const carts = await Cart.find({ user: req.user })
       .populate("user", "name email")
-      .populate("product", "_id name brand price discount imageUrl stock");
+      .populate("product", "_id name brand price discount imageUrl stock netWeight");
 
     // Menghitung total quantity
     const totalQuantity = carts.reduce((sum, item) => sum + item.quantity, 0);

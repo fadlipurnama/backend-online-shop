@@ -2,13 +2,13 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 // Skema Transaksi
-const OrderSchema = new Schema(
+const TransactionSchema = new Schema(
   {
-    // id: {
-    //   type: String,
-    //   required: true,
-    //   unique: true,
-    // },
+    id: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     grossAmount: {
       type: Number,
       required: true,
@@ -25,8 +25,8 @@ const OrderSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["DIKIRIM", "SELESAI", "DIBATALKAN", "DIKEMAS"], // Tambahkan status pengiriman
-      default: "DIKEMAS",
+      enum: ["PENDING_PAYMENT", "SUCCESS", "FAILED", "SHIPPED"], // Tambahkan status pengiriman
+      default: "PENDING_PAYMENT",
     },
     snap_token: String,
     snap_redirect_url: String,
@@ -51,10 +51,6 @@ const OrderSchema = new Schema(
       type: String,
       default: "",
     },
-    shippingNumber: {
-      type: String,
-      required: true,
-    },
     products: {
       type: Array,
       required: true,
@@ -68,4 +64,4 @@ const OrderSchema = new Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("order", OrderSchema);
+module.exports = mongoose.model("transaction", TransactionSchema);

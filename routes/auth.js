@@ -7,6 +7,7 @@ const { body, validationResult } = require("express-validator");
 const authUser = require("../middleware/authUser");
 const dotenv = require("dotenv");
 const { deleteAllUserData } = require("../controller/deleteUser");
+const { images, processImage } = require("../middleware/images");
 dotenv.config();
 
 // create a user :post "/auth",!auth
@@ -174,57 +175,83 @@ router.get("/getDetailUser", authUser, async (req, res) => {
 // update user details
 // Ganti dengan path ke middleware authUser Anda
 
-router.put("/updateUser", authUser, async (req, res) => {
-  const { username, ...updateData } = req.body;
-  const userId = req.user;
+router.put(
+  "/updateUser",
+  authUser,
+  images.single("imageUrl"), // Middleware untuk menangani upload file
+  processImage("userProfile"), // Middleware untuk memproses gambar (resize, compress, dll.)
+  async (req, res) => {
+    const { username, ...updateData } = req.body;
+    const userId = req.user;
 
-  try {
-    const user = await User.findById(userId);
-    if (!user) {
-      console.error("User tidak ditemukan:", userId);
-      return res.status(400).json({ success: false, error: "Pengguna tidak ditemukan" });
-    }
-
-    if (username) {
-      const usernameRegex = /^[a-zA-Z0-9_]+$/;
-      if (!usernameRegex.test(username)) {
-        return res.status(400).json({
-          success: false,
-          error: "Username hanya boleh berisi huruf, angka, dan underscore (_)",
-        });
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        console.error("User tidak ditemukan:", userId);
+        return res
+          .status(400)
+          .json({ success: false, error: "Pengguna tidak ditemukan" });
       }
 
-      if (username.length < 6 || username.length > 10) {
-        return res.status(400).json({
-          success: false,
-          error: "Panjang username minimal 6 - 10 karakter",
-        });
+      // Validasi dan update username
+      if (username) {
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        if (!usernameRegex.test(username)) {
+          return res.status(400).json({
+            success: false,
+            error:
+              "Username hanya boleh berisi huruf, angka, dan underscore (_) ",
+          });
+        }
+
+        if (username.length < 6 || username.length > 10) {
+          return res.status(400).json({
+            success: false,
+            error: "Panjang username minimal 6 - 10 karakter",
+          });
+        }
+
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+          return res
+            .status(400)
+            .json({ success: false, error: "Username sudah digunakan" });
+        }
+
+        updateData.username = username;
       }
 
-      const existingUser = await User.findOne({ username });
-      if (existingUser) {
-        return res.status(400).json({ success: false, error: "Username sudah digunakan" });
+      // Mengambil URL gambar yang diunggah
+      const protocol = req.protocol;
+      const host = req.get('host');
+      const imageUrl = req.file
+        ? `${protocol}://${host}/api/assets/images/userProfile/${req.file.filename}`
+        : user.imageUrl; // Jika tidak ada file yang diunggah, gunakan gambar lama
+
+      // Menambahkan URL gambar ke updateData
+      updateData.imageUrl = imageUrl;
+
+      // Update data user
+      const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+        new: true,
+      });
+
+      if (!updatedUser) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Gagal memperbarui pengguna" });
       }
 
-      updateData.username = username;
+      return res.status(200).json({ success: true, data: updatedUser });
+    } catch (error) {
+      console.error("Kesalahan saat memperbarui pengguna:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Terjadi kesalahan saat memperbarui pengguna",
+      });
     }
-
-    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
-
-    if (!updatedUser) {
-      return res.status(400).json({ success: false, error: "Gagal memperbarui pengguna" });
-    }
-
-    return res.status(200).json({ success: true, data: updatedUser });
-  } catch (error) {
-    console.error("Kesalahan saat memperbarui pengguna:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Terjadi kesalahan saat memperbarui pengguna",
-    });
   }
-});
-
+);
 
 router.put(
   "/change-password",

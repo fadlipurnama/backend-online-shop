@@ -1,30 +1,39 @@
 const express = require("express");
 const router = express.Router();
 const Order = require("../models/Order"); // Import model Order
-const authUser = require("../middleware/authUser");
+// const authUser = require("../middleware/authUser");
 
-// Fetch Order Status
-router.get("/fetchOrderStatus", authUser, async (req, res) => {
+router.get("/getOrdersByUserId/:userId", async (req, res) => {
+  const { userId } = req.params;
+
   try {
-    // Mengambil status pesanan untuk user yang sedang diautentikasi
-    const orders = await Order.find({ userId: req.user.id });
+    const orders = await Order.find({ userId });
+
+    console.log(orders)
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Tidak ada pesanan yang ditemukan untuk user ini",
+      });
+    }
+
     res.json({
       success: true,
+      message: "Berhasil mendapatkan pesanan untuk user",
       data: orders,
-      message: "Order status fetched successfully",
     });
   } catch (error) {
-    console.error("Error fetching order status:", error);
+    console.error("Error fetching orders by user ID:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch order status",
-      error: error.message,
+      message: "Gagal mendapatkan daftar pesanan untuk user",
     });
   }
 });
 
 // Update Order Status
-router.put("/updateOrderStatus/:id", authUser, async (req, res) => {
+router.put("/updateOrderStatus/:id", async (req, res) => {
   const orderId = req.params.id;
   const { status } = req.body;
   try {
@@ -50,7 +59,7 @@ router.put("/updateOrderStatus/:id", authUser, async (req, res) => {
 });
 
 // Fetch Shopping History
-router.get("/fetchShoppingHistory", authUser, async (req, res) => {
+router.get("/fetchShoppingHistory", async (req, res) => {
   try {
     // Mengambil riwayat belanja untuk user yang sedang diautentikasi
     const shoppingHistory = await Order.find({
