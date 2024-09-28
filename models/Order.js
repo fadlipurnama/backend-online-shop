@@ -4,11 +4,10 @@ const { Schema } = mongoose;
 // Skema Transaksi
 const OrderSchema = new Schema(
   {
-    // id: {
-    //   type: String,
-    //   required: true,
-    //   unique: true,
-    // },
+    transactionId: {
+      type: String,
+      required: true,
+    },
     grossAmount: {
       type: Number,
       required: true,
@@ -20,17 +19,13 @@ const OrderSchema = new Schema(
     customerEmail: {
       type: String,
       required: true,
-      index: true, // Indeks untuk mempercepat pencarian
     },
 
-    status: {
+    deliveryStatus: {
       type: String,
-      enum: ["DIKIRIM", "SELESAI", "DIBATALKAN", "DIKEMAS"], // Tambahkan status pengiriman
-      default: "DIKEMAS",
+      enum: ["ON_PROCESS", "DELIVERED", "DELIVERY", "CANCELED"], // Tambahkan status pengiriman
+      default: "ON_PROCESS",
     },
-    snap_token: String,
-    snap_redirect_url: String,
-
     shippingAddress: {
       type: String,
       required: true,
@@ -53,17 +48,13 @@ const OrderSchema = new Schema(
     },
     shippingNumber: {
       type: String,
-      required: true,
+      default: "",
     },
     products: {
       type: Array,
       required: true,
     },
-    // deliveryStatus: {
-    //   type: String,
-    //   enum: ["PENDING", "ON_PROCESS", "DELIVERED"],
-    //   default: "PENDING",
-    // },
+   
   },
   { timestamps: true }
 );

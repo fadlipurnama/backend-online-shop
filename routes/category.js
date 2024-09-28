@@ -12,10 +12,12 @@ const { images, processImage } = require("../middleware/images");
 router.post(
   "/createCategory",
   images.single("imageUrl"),
-  processImage,
+  processImage('categories'),
   body("name", "Nama category wajib diisi").notEmpty(),
   body("author", "Penulis wajib diisi").notEmpty(),
   body("isActive", "Status category produk wajib diisi").notEmpty(),
+  // body("isActive").optional(),
+
   async (req, res) => {
     const errors = validationResult(req);
     const protocol = req.protocol;
@@ -27,9 +29,22 @@ router.post(
       return res.status(400).json({ success: false, error });
     }
 
+       // Query sederhana untuk memeriksa koneksi MongoDB
+      //  try {
+      //   const checkDb = await Category.find();
+      //   console.log("Cek koneksi MongoDB: Kategori ditemukan:", checkDb.length);
+      // } catch (err) {
+    //   console.error("Koneksi MongoDB bermasalah:", err);
+      //   return res.status(500).json({
+      //     success: false,
+      //     message: "Gagal terhubung ke database",
+      //     error: err.message,
+      //   });
+      // }
+
     const { name, author, isActive } = req.body;
     const imageUrl = req.file
-      ? `${protocol}://${host}/api/assets/images/categories${req.file.filename}`
+      ? `${protocol}://${host}/api/assets/images/categories/${req.file.filename}`
       : "";
 
     console.log("file gambar category: ", req.file);
@@ -42,6 +57,7 @@ router.post(
       });
 
       await newCategory.save();
+      console.log("Kategori berhasil disimpan:", newCategory); // Log setelah penyimpanan sukses
       res.status(201).json({
         success: true,
         message: "Berhasil membuat kategori",
@@ -57,6 +73,7 @@ router.post(
     }
   }
 );
+
 
 // Get All Category
 router.get("/getAllCategory", async (req, res) => {

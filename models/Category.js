@@ -2,9 +2,18 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 const CategorySchema = new Schema(
   {
-    name: String,
-    imageUrl: String,
-    author: String,
+    name: {
+      type: String,
+      required: true,
+    },
+    imageUrl: {
+      type: String,
+      required: true,
+    },
+    author: {
+      type: String,
+      required: true,
+    },
     isActive: {
       default: true,
       type: Boolean,

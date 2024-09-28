@@ -1,11 +1,13 @@
 const express = require("express");
+const crypto = require("crypto");
 const router = express.Router();
-const { nanoid } = require("nanoid");
 const { body, validationResult } = require("express-validator");
 const Transaction = require("../models/Transaction");
-const snap = require("../midtransConfig"); // Gunakan Snap dari midtransConfig
+const snap = require("../midtransConfig");
 const Product = require("../models/Product");
 const authUser = require("../middleware/authUser");
+const { customAlphabet } = require("nanoid");
+const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
 
 // Create Transaction
 router.post("/createTransaction", authUser, async (req, res) => {
@@ -49,7 +51,14 @@ router.post("/createTransaction", authUser, async (req, res) => {
 
   console.log("Gross Amount:", grossAmount);
 
-  const transaction_id = `ID${nanoid(4)}-${nanoid(8)}`;
+  const nanoidAlphaNumeric = customAlphabet(
+    "abcdefghijklmnopqrstuvwxyz0123456789",
+    8
+  );
+
+  const transaction_id = `ID${nanoidAlphaNumeric(4)}${nanoidAlphaNumeric(8)}`;
+
+  // const transaction_id = `ID${nanoid(4)}${nanoid(8)}`;
 
   // Buat transaksi baru di database
   const transaction = new Transaction({
@@ -103,9 +112,9 @@ router.post("/createTransaction", authUser, async (req, res) => {
       phone: phoneNumber,
     },
     callbacks: {
-      finish: `${process.env.FRONTEND_URL_1}/transaction?transactionId=${transaction_id}`,
-      error: `${process.env.FRONTEND_URL_1}/transaction?transactionId=${transaction_id}`,
-      pending: `${process.env.FRONTEND_URL_1}/transaction?transactionId=${transaction_id}`,
+      finish: `${process.env.FRONTEND_URL_1}/transaction?transaction_id=${transaction_id}`,
+      error: `${process.env.FRONTEND_URL_1}/transaction?transaction_id=${transaction_id}`,
+      pending: `${process.env.FRONTEND_URL_1}/transaction?transaction_id=${transaction_id}`,
     },
   };
 
@@ -116,7 +125,7 @@ router.post("/createTransaction", authUser, async (req, res) => {
     );
 
     // Simpan Snap token untuk digunakan di frontend
-    transaction.snap_token = transactionResponse.token;
+    transaction.token = transactionResponse.token;
 
     await transaction.save(); // Simpan kembali transaksi dengan token
 
@@ -194,9 +203,36 @@ router.get("/getAllTransactions", async (req, res) => {
 //   }
 // });
 
+// Get Transactions By User ID
+router.get("/getTransactionByUserId/:userId", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const transactions = await Transaction.find({ userId }).sort({ createdAt: -1 });
+
+    if (!transactions || transactions.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Tidak ada transaksi yang ditemukan untuk user ini",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Berhasil mendapatkan transaksi untuk user",
+      data: transactions,
+    });
+  } catch (error) {
+    console.error("Error fetching transactions by user ID:", error);
+    res.status(500).json({
+      success: false,
+      message: "Gagal mendapatkan transaksi untuk user",
+    });
+  }
+});
+
 router.get("/getTransactionById/:id", async (req, res) => {
   const { id } = req.params;
-  
+
   try {
     const transaction = await Transaction.findOne({ id });
 
@@ -221,41 +257,13 @@ router.get("/getTransactionById/:id", async (req, res) => {
   }
 });
 
-// Get Transactions By User ID
-router.get("/getTransactionByUserId/:userId", async (req, res) => {
-  const { userId } = req.params;
-  
-  try {
-    const transactions = await Transaction.find({ userId });
-
-    if (!transactions || transactions.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Tidak ada transaksi yang ditemukan untuk user ini",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Berhasil mendapatkan transaksi untuk user",
-      data: transactions,
-    });
-  } catch (error) {
-    console.error("Error fetching transactions by user ID:", error);
-    res.status(500).json({
-      success: false,
-      message: "Gagal mendapatkan transaksi untuk user",
-    });
-  }
-});
-
 // Update Transaction Status
-router.put("/updateTransaction/:id", async (req, res) => {
+router.put("/updateTransactionById/:id", async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
   try {
-    const validStatuses = ["PENDING_PAYMENT", "SUCCESS", "FAILED"];
+    const validStatuses = ["PENDING_PAYMENT", "PAID", "CANCELED"];
     if (!validStatuses.includes(status)) {
       return res
         .status(400)
@@ -291,25 +299,81 @@ router.put("/updateTransaction/:id", async (req, res) => {
 router.post("/transactionNotification", async (req, res) => {
   const notificationData = req.body;
 
-  const transaction_id = notificationData.order_id;
+  const transactionId = notificationData.order_id;
   const status = notificationData.transaction_status;
+  const fraudStatus = notificationData.fraud_status;
+  const grossAmount = notificationData.gross_amount;
+  const signatureKey = notificationData.signature_key;
 
   try {
-    const transaction = await Transaction.findOne({ id: transaction_id });
+    // Mengambil transaksi menggunakan ID melalui endpoint /getTransactionById
+    const transactionResponse = await Transaction.findOne({
+      id: transactionId,
+    });
 
-    if (!transaction) {
+    if (!transactionResponse) {
       return res
         .status(404)
         .json({ success: false, message: "Transaksi tidak ditemukan" });
     }
 
-    transaction.status = status;
-    await transaction.save();
+    // Verifikasi signature key
+    const hash = crypto
+      .createHash("sha512")
+      .update(
+        `${transactionId}${notificationData.status_code}${grossAmount}${MIDTRANS_SERVER_KEY}`
+      )
+      .digest("hex");
+
+    if (signatureKey !== hash) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Signature key",
+      });
+    }
+
+    // Memperbarui status transaksi berdasarkan status yang diterima melalui endpoint /updateTransactionById
+    let paymentMethod = notificationData.payment_type;
+    let settlementTime = notificationData.settlement_time;
+
+    // Jika payment_type adalah "bank_transfer", ambil bank dari va_numbers
+    if (
+      notificationData.payment_type === "bank_transfer" &&
+      notificationData.va_numbers.length > 0
+    ) {
+      paymentMethod = notificationData.va_numbers[0].bank; // Ambil bank dari va_numbers
+    }
+
+    let updatedStatus;
+    if (status === "capture" && fraudStatus === "accept") {
+      updatedStatus = "PAID";
+    } else if (status === "settlement") {
+      updatedStatus = "PAID";
+    } else if (
+      status === "cancel" ||
+      status === "deny" ||
+      status === "expire"
+    ) {
+      updatedStatus = "CANCELED";
+    } else if (status === "pending") {
+      updatedStatus = "PENDING_PAYMENT";
+    }
+
+    // Memperbarui transaksi
+    await Transaction.findByIdAndUpdate(
+      transactionResponse._id,
+      { status: updatedStatus, paymentMethod, settlementTime },
+      { new: true, runValidators: true }
+    );
 
     res.status(200).json({
       success: true,
       message: "Notifikasi diterima dan status transaksi diperbarui",
-      data: transaction,
+      data: {
+        ...transactionResponse.toObject(),
+        status: updatedStatus,
+        paymentMethod,
+      },
     });
   } catch (error) {
     console.error("Error handling transaction notification:", error);

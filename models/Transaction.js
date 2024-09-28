@@ -25,12 +25,13 @@ const TransactionSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["PENDING_PAYMENT", "SUCCESS", "FAILED", "SHIPPED"], // Tambahkan status pengiriman
+      enum: ["PENDING_PAYMENT", "PAID", "CANCELED"], // Tambahkan status pengiriman
       default: "PENDING_PAYMENT",
     },
-    snap_token: String,
-    snap_redirect_url: String,
-
+    token: {
+      type: String,
+      // required: true,
+    },
     shippingAddress: {
       type: String,
       required: true,
@@ -55,11 +56,10 @@ const TransactionSchema = new Schema(
       type: Array,
       required: true,
     },
-    // deliveryStatus: {
-    //   type: String,
-    //   enum: ["PENDING", "ON_PROCESS", "DELIVERED"],
-    //   default: "PENDING",
-    // },
+    settlementTime: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

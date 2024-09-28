@@ -1,55 +1,3 @@
-// const express = require("express");
-// const router = express.Router();
-// const Cart = require("../models/Cart");
-// const authUser = require("../middleware/authUser");
-
-// // get all cart products
-// router.get("/fetchCart", authUser, async (req, res) => {
-//     try {
-//         const cart = await Cart.find({ user: req.user.id })
-//             .populate("productId", "name price image rating type")
-//             .populate("user", "name email");
-//         res.send(cart);
-//     } catch (error) {
-//         res.status(500).send("Internal server error");
-//     }
-// });
-
-// // add to cart
-// router.post("/addCart", authUser, async (req, res) => {
-//     try {
-//         const { _id, quantity } = req.body;
-//         const findProduct = await Cart.findOne({ $and: [{ productId: _id }, { user: req.user.id }] })
-//         if (findProduct) {
-//             return res.status(400).json({ msg: "Product already in a cart" })
-//         }
-//         else {
-//             const user = req.header;
-//             const cart = new Cart({
-//                 user: req.user.id,
-//                 productId: _id,
-//                 quantity,
-//             });
-//             const savedCart = await cart.save();
-//             res.send(savedCart);
-//         }
-//     } catch (error) {
-//         res.status(500).send("Internal server error");
-//     }
-// });
-
-// // remove from cart
-// router.delete("/deleteCart/:id", authUser, async (req, res) => {
-//     const { id } = req.params;
-//     try {
-//         const result = await Cart.findByIdAndDelete(id)
-//         res.send(result);
-//     } catch (error) {
-//         res.status(500).send("Internal server error");
-//     }
-// });
-// module.exports = router;
-
 const express = require("express");
 const router = express.Router();
 const Cart = require("../models/Cart");
@@ -151,6 +99,25 @@ router.delete("/deleteCart/:id", authUser, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Gagal menghapus produk dari keranjang",
+      error: error.message,
+    });
+  }
+});
+
+router.delete("/clearCart", authUser, async (req, res) => {
+  try {
+    // Menghapus semua item dari keranjang berdasarkan user yang sedang login
+    await Cart.deleteMany({ user: req.user });
+
+    res.json({
+      success: true,
+      message: "Semua produk berhasil dihapus dari keranjang",
+    });
+  } catch (error) {
+    console.error("Error menghapus semua produk dari keranjang:", error);
+    res.status(500).json({
+      success: false,
+      message: "Gagal menghapus semua produk dari keranjang",
       error: error.message,
     });
   }

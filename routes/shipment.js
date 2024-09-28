@@ -61,7 +61,7 @@ router.post("/getShippingOptions", async (req, res) => {
     headers: {
       key: `${process.env.RAJA_ONGKIR_API_KEY}`,
       "Content-Type": "application/x-www-form-urlencoded",
-      "Content-Length": Buffer.byteLength(postData), // Gunakan Buffer.byteLength
+      "Content-Length": Buffer.byteLength(postData),
     },
   };
 
@@ -89,7 +89,6 @@ router.post("/getShippingOptions", async (req, res) => {
   }
 });
 
-// Endpoint untuk mendapatkan daftar kurir
 router.get("/getCouriers", (req, res) => {
   const couriers = ["jne", "pos", "tiki", "anteraja"]; // Tambahkan kurir yang didukung
   res.status(200).json({
@@ -97,6 +96,50 @@ router.get("/getCouriers", (req, res) => {
     data: couriers,
   });
 });
+
+
+router.post("/checkWaybill", async (req, res) => {
+  const { waybill, courier } = req.body;
+
+  if (!waybill || !courier) {
+    return res.status(400).json({
+      success: false,
+      message: "Waybill and courier are required",
+    });
+  }
+
+  const postData = querystring.stringify({
+    waybill,
+    courier,
+  });
+
+  const options = {
+    hostname: "pro.rajaongkir.com",
+    path: "/api/waybill",
+    method: "POST",
+    headers: {
+      key: `${process.env.RAJA_ONGKIR_API_KEY}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Content-Length": Buffer.byteLength(postData),
+    },
+  };
+
+  try {
+    const result = await makeRequest(options, postData);
+    const trackingData = result.rajaongkir.result;
+
+    res.status(200).json({
+      success: true,
+      data: trackingData,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error || "Something went wrong",
+    });
+  }
+});
+
 
 // Endpoint untuk melakukan pengecekan tarif
 router.post("/checkRates", async (req, res) => {

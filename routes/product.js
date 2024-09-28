@@ -10,7 +10,7 @@ const path = require("path");
 // Create Product
 router.post(
   "/createProduct",
-  // authAdmin, // Uncomment jika dibutuhkan autentikasi admin
+  authAdmin,
   images.single("imageUrl"),
   processImage('products'),
   async (req, res) => {
@@ -119,25 +119,32 @@ router.get("/getProductById/:id", async (req, res) => {
 // Search Product
 router.get("/searchProducts", async (req, res) => {
   try {
-    const { title, category, description, brand } = req.query;
+    const { search } = req.query;
     let query = {};
-    if (title) {
-      query.name = { $regex: title, $options: "i" };
+
+    if (search) {
+      query = {
+        $or: [
+          { name: { $regex: search, $options: "i" } },        
+          { brand: { $regex: search, $options: "i" } },       
+          { category: { $regex: search, $options: "i" } },    
+        ]
+      };
     }
-    if (category) {
-      query.category = { $regex: category, $options: "i" };
-    }
-    if (description) {
-      query.description = { $regex: description, $options: "i" };
-    }
-    if (brand) {
-      query.brand = { $regex: brand, $options: "i" };
-    }
+
     const products = await Product.find(query);
-    res.json(products);
+    res.json({
+      success: true,
+      message: "Produk berhasil ditemukan",
+      data: products,
+    });
   } catch (error) {
     console.error("Error searching products:", error);
-    res.status(500).send("Failed to search products");
+    res.status(500).json({
+      success: false,
+      message: "Gagal mencari produk",
+      error: error.message,
+    });
   }
 });
 

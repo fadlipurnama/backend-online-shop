@@ -13,7 +13,7 @@ const UserSchema = new Schema(
     },
     imageUrl: {
       type: String,
-      default: '',
+      default: "",
     },
     phoneNumber: {
       type: String,
@@ -24,6 +24,11 @@ const UserSchema = new Schema(
       type: String,
       required: true,
       unique: true,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin", "moderator"],
+      default: "user",
     },
     username: {
       type: String,
@@ -53,6 +58,38 @@ const UserSchema = new Schema(
     province: {
       type: String,
     },
+    // address: {
+    //   street: { type: String },
+    //   city: { type: String },
+    //   province: { type: String },
+    //   zipCode: { type: String },
+    //   country: { type: String, default: "Indonesia" },
+    // },
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
+    },
+    otp: {
+      type: String,
+    },
+    otpExpires: {
+      type: Date,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: {
+      type: String,
+    },
+    verificationExpires: {
+      type: Date,
+    },
+    // lastLogin: {
+    //   type: Date,
+    // },
   },
   { timestamps: true }
 );

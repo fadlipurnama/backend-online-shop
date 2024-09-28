@@ -55,7 +55,7 @@ const ProductSchema = new Schema(
     },
     netWeight: {
       type: Number,
-      required: true,
+      // required: true,
     },
     serialNumber: {
       type: String,
