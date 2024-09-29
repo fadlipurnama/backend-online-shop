@@ -58,7 +58,6 @@ router.post("/createTransaction", authUser, async (req, res) => {
 
   const transaction_id = `ID${nanoidAlphaNumeric(4)}${nanoidAlphaNumeric(8)}`;
 
-  // const transaction_id = `ID${nanoid(4)}${nanoid(8)}`;
 
   // Buat transaksi baru di database
   const transaction = new Transaction({

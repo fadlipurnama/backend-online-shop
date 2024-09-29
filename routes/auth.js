@@ -172,14 +172,11 @@ router.get("/getDetailUser", authUser, async (req, res) => {
   }
 });
 
-// update user details
-// Ganti dengan path ke middleware authUser Anda
-
 router.put(
   "/updateUser",
   authUser,
-  images.single("imageUrl"), // Middleware untuk menangani upload file
-  processImage("userProfile"), // Middleware untuk memproses gambar (resize, compress, dll.)
+  images.single("imageUrl"),
+  processImage("userProfile"),
   async (req, res) => {
     const { username, ...updateData } = req.body;
     const userId = req.user;
@@ -252,6 +249,59 @@ router.put(
     }
   }
 );
+
+// Route untuk memperbarui profil pengguna
+router.put(
+  "/updateProfile",
+  authUser,
+  [
+    body("password", "Password harus diisi").exists(),
+    body("firstName", "Nama depan tidak boleh kosong").optional().isLength({ min: 1 }),
+    body("lastName", "Nama belakang tidak boleh kosong").optional().isLength({ min: 1 }),
+    body("phoneNumber", "Nomor telepon tidak valid").optional().isLength({ min: 10, max: 12 }),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, error: errors.array()[0].msg });
+    }
+
+    const { password, firstName, lastName, phoneNumber } = req.body;
+    const userId = req.user;
+
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, error: "Pengguna tidak ditemukan" });
+      }
+
+      // Validasi password
+      const isPasswordMatch = await bcrypt.compare(password, user.password);
+      if (!isPasswordMatch) {
+        return res.status(401).json({ success: false, error: "Password salah" });
+      }
+
+      // Siapkan data untuk diperbarui
+      const updateData = {};
+      if (firstName) updateData.firstName = firstName;
+      if (lastName) updateData.lastName = lastName;
+      if (phoneNumber) updateData.phoneNumber = String(phoneNumber);
+
+      // Perbarui data pengguna
+      const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
+
+      if (!updatedUser) {
+        return res.status(400).json({ success: false, error: "Gagal memperbarui profil" });
+      }
+
+      return res.status(200).json({ success: true, data: updatedUser });
+    } catch (error) {
+      console.error("Kesalahan saat memperbarui profil:", error);
+      return res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  }
+);
+
 
 router.post('/reset-password/:token', [
   body('newPassword', 'Password baru setidaknya berisi 5 karakter').isLength({ min: 5 }),

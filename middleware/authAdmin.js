@@ -17,7 +17,7 @@ const checkAdmin = async (req, res, next) => {
     req.user = data.userId;
 
     const checkAdmin = await User.findById(req.user);
-    if (checkAdmin && checkAdmin.isAdmin) {
+    if (checkAdmin && checkAdmin.role === 'admin') {
       next();
     } else {
       console.error("Pengguna bukan admin");

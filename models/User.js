@@ -39,10 +39,10 @@ const UserSchema = new Schema(
       type: String,
       required: true,
     },
-    isAdmin: {
-      default: false,
-      type: Boolean,
-    },
+    // isAdmin: {
+    //   default: false,
+    //   type: Boolean,
+    // },
     address: {
       type: String,
     },
