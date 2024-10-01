@@ -27,7 +27,7 @@ router.post(
 
     const { name, description, author, isActive } = req.body;
     const imageUrl = req.file
-      ? `${protocol}://${host}/api/assets/images/banners/${req.file.filename}`
+      ? `${process.env.BACKEND_URL}/api/assets/images/banners/${req.file.filename}`
       : "";
 
     console.log("file gambar banner: ", req.file);

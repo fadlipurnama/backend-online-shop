@@ -39,10 +39,8 @@ router.post(
       ratedVoltage,
     } = req.body;
 
-    const protocol = req.protocol;
-    const host = req.get("host");
     const imageUrl = req.file
-      ? `${protocol}://${host}/api/assets/images/products/${req.file.filename}`
+      ? `${process.env.BACKEND_URL}/api/assets/images/products/${req.file.filename}`
       : "";
 
     try {
@@ -116,37 +114,6 @@ router.get("/getProductById/:id", async (req, res) => {
   }
 });
 
-// Search Product
-// router.get("/searchProducts", async (req, res) => {
-//   try {
-//     const { search } = req.query;
-//     let query = {};
-
-//     if (search) {
-//       query = {
-//         $or: [
-//           { name: { $regex: search, $options: "i" } },
-//           { brand: { $regex: search, $options: "i" } },
-//           { category: { $regex: search, $options: "i" } },
-//         ]
-//       };
-//     }
-
-//     const products = await Product.find(query);
-//     res.json({
-//       success: true,
-//       message: "Produk berhasil ditemukan",
-//       data: products,
-//     });
-//   } catch (error) {
-//     console.error("Error searching products:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Gagal mencari produk",
-//       error: error.message,
-//     });
-//   }
-// });
 
 router.get("/searchProducts", async (req, res) => {
   try {
