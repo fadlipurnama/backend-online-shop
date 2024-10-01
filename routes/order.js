@@ -70,7 +70,7 @@ router.post("/createOrder", authUser, async (req, res) => {
   }
 
   try {
-    const newOrder = new Order({
+    newOrder = await Order.create({
       grossAmount,
       customerName,
       customerEmail,
@@ -84,33 +84,32 @@ router.post("/createOrder", authUser, async (req, res) => {
       products,
     });
 
-    const savedOrder = await newOrder.save();
-
     res.status(201).json({
       success: true,
-      message: "Order berhasil dibuat",
+      message: "Pesanan berhasil dibuat",
     });
   } catch (error) {
     console.error("Error creating order:", error);
     res.status(500).json({
       success: false,
-      message: "Gagal membuat order",
+      message: "Gagal membuat pesanan",
       error: error.message,
     });
   }
 });
 
 // Get Orders by User ID (sudah ada)
-router.get("/getOrdersByUserId/:userId", authUser, async (req, res) => {
+router.get("/getOrderByUserId/:userId", authUser, async (req, res) => {
   const { userId } = req.params;
 
   try {
     const orders = await Order.find({ userId }).sort({ createdAt: -1 });
 
-    if (!orders || orders.length === 0) {
-      return res.status(404).json({
-        success: false,
+    if (orders.length === 0) {
+      return res.status(200).json({
+        success: true,
         message: "Tidak ada pesanan yang ditemukan untuk user ini",
+        data: orders,
       });
     }
 
@@ -130,7 +129,7 @@ router.get("/getOrdersByUserId/:userId", authUser, async (req, res) => {
 
 // **New** Get Order by Order ID
 router.get("/getOrderById/:orderId", authUser, async (req, res) => {
-  const { orderId: transactionId } = req.params;
+  const { orderId:transactionId } = req.params;
 
   try {
     const order = await Order.findOne({ transactionId });
@@ -147,7 +146,7 @@ router.get("/getOrderById/:orderId", authUser, async (req, res) => {
       message: "Berhasil mendapatkan detail pesanan",
       data: order,
     });
-  console.log("orderData", order);
+    console.log("orderData", order);
   } catch (error) {
     console.error("Error fetching order by ID:", error);
     res.status(500).json({
@@ -160,11 +159,11 @@ router.get("/getOrderById/:orderId", authUser, async (req, res) => {
 
 // **New** Update Order Status and Shipping Number
 router.put("/updateOrderStatus/:orderId", authAdmin, async (req, res) => {
-  const { orderId: transactionId } = req.params;
+  const { orderId: transactionId } = req.params; // Biarkan tetap orderId jika sesuai dengan skema database
   const { status: deliveryStatus, shippingNumber } = req.body;
 
   try {
-    // Validasi input status dan shippingNumber
+    // Validasi input status
     if (!deliveryStatus || typeof deliveryStatus !== "string") {
       return res.status(400).json({
         success: false,
@@ -172,11 +171,18 @@ router.put("/updateOrderStatus/:orderId", authAdmin, async (req, res) => {
       });
     }
 
+    // Menyiapkan update fields
+    const updateFields = { deliveryStatus };
+
+    // Hanya tambahkan shippingNumber jika disediakan dalam request body
+    if (shippingNumber) {
+      updateFields.shippingNumber = shippingNumber;
+    }
+
     // Mengupdate status dan shippingNumber pesanan
     const updatedOrder = await Order.findOneAndUpdate(
-      { transactionId },
-      { deliveryStatus, shippingNumber },
-      { new: true }
+      { transactionId }, // Pastikan query berdasarkan orderId
+      updateFields
     );
 
     if (!updatedOrder) {

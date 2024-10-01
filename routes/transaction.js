@@ -126,7 +126,7 @@ router.post("/createTransaction", authUser, async (req, res) => {
     // Simpan Snap token untuk digunakan di frontend
     transaction.token = transactionResponse.token;
 
-    await transaction.save(); // Simpan kembali transaksi dengan token
+    await transaction.save();
 
     console.log("Transaction Response:", transactionResponse);
 
@@ -138,7 +138,7 @@ router.post("/createTransaction", authUser, async (req, res) => {
         grossAmount: grossAmount,
         customerName: `${firstName} ${lastName}`,
         customerEmail,
-        redirectUrl: transactionResponse.redirect_url,
+        // redirectUrl: transactionResponse.redirect_url,
         token: transactionResponse.token,
       },
     });
@@ -178,31 +178,40 @@ router.get("/getAllTransactions", async (req, res) => {
   }
 });
 
-// // Get Transaction by ID
-// router.get("/getTransactionById/:id", async (req, res) => {
-//   try {
-//     const transaction = await Transaction.findById(req.params.id).populate(
-//       "transactionItems"
-//     );
-//     if (!transaction) {
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "Transaksi tidak ditemukan" });
-//     }
-//     res.json({
-//       success: true,
-//       message: "Berhasil mendapatkan transaksi",
-//       data: transaction,
-//     });
-//   } catch (error) {
-//     console.error("Error fetching transaction:", error);
-//     res
-//       .status(500)
-//       .json({ success: false, message: "Gagal mendapatkan transaksi" });
-//   }
-// });
+// Delete Transaction
+router.delete("/deleteTransaction/:transactionId", authUser, async (req, res) => {
+  const { transactionId } = req.params;
 
-// Get Transactions By User ID
+  try {
+    // Cari transaksi berdasarkan id
+    const transaction = await Transaction.findOne({ transactionId });
+
+    // Jika transaksi tidak ditemukan
+    if (!transaction) {
+      return res.status(404).json({
+        success: false,
+        message: "Transaksi tidak ditemukan",
+      });
+    }
+
+    // Hapus transaksi
+    await Transaction.deleteOne({ transactionId });
+
+    // Kirimkan respons sukses
+    res.json({
+      success: true,
+      message: "Transaksi berhasil dihapus",
+    });
+  } catch (error) {
+    console.error("Error deleting transaction:", error);
+    res.status(500).json({
+      success: false,
+      message: "Gagal menghapus transaksi",
+    });
+  }
+});
+
+
 router.get("/getTransactionByUserId/:userId", async (req, res) => {
   const { userId } = req.params;
   try {

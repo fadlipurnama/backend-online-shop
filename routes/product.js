@@ -12,7 +12,7 @@ router.post(
   "/createProduct",
   authAdmin,
   images.single("imageUrl"),
-  processImage('products'),
+  processImage("products"),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -117,27 +117,79 @@ router.get("/getProductById/:id", async (req, res) => {
 });
 
 // Search Product
+// router.get("/searchProducts", async (req, res) => {
+//   try {
+//     const { search } = req.query;
+//     let query = {};
+
+//     if (search) {
+//       query = {
+//         $or: [
+//           { name: { $regex: search, $options: "i" } },
+//           { brand: { $regex: search, $options: "i" } },
+//           { category: { $regex: search, $options: "i" } },
+//         ]
+//       };
+//     }
+
+//     const products = await Product.find(query);
+//     res.json({
+//       success: true,
+//       message: "Produk berhasil ditemukan",
+//       data: products,
+//     });
+//   } catch (error) {
+//     console.error("Error searching products:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Gagal mencari produk",
+//       error: error.message,
+//     });
+//   }
+// });
+
 router.get("/searchProducts", async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, limit } = req.query; // Ambil limit dari query params
     let query = {};
 
+    // Jika search term ada, buat query pencarian
     if (search) {
       query = {
         $or: [
-          { name: { $regex: search, $options: "i" } },        
-          { brand: { $regex: search, $options: "i" } },       
-          { category: { $regex: search, $options: "i" } },    
-        ]
+          { name: { $regex: search, $options: "i" } },
+          { brand: { $regex: search, $options: "i" } },
+          { category: { $regex: search, $options: "i" } },
+        ],
       };
     }
 
-    const products = await Product.find(query);
-    res.json({
-      success: true,
-      message: "Produk berhasil ditemukan",
-      data: products,
-    });
+    // Jika limit ada dan lebih dari 0, ambil hasil terbatas
+    if (limit && Number(limit) > 0) {
+      const products = await Product.find(query).limit(Number(limit));
+
+      const suggestions = products.map((product) => ({
+        name: product.name,
+        id: product._id,
+        imageUrl: product.imageUrl,
+      }));
+
+      res.json({
+        success: true,
+        message: "Saran produk berhasil ditemukan",
+        data: suggestions, // Hanya kirim saran
+      });
+
+      // Jika tidak ada limit atau limit = 0, kirimkan semua produk
+    } else {
+      const products = await Product.find(query);
+
+      res.json({
+        success: true,
+        message: "Daftar produk berhasil ditemukan",
+        data: products,
+      });
+    }
   } catch (error) {
     console.error("Error searching products:", error);
     res.status(500).json({

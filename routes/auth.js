@@ -288,13 +288,13 @@ router.put(
       if (phoneNumber) updateData.phoneNumber = String(phoneNumber);
 
       // Perbarui data pengguna
-      const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
-
+      const updatedUser = await User.findByIdAndUpdate(userId, updateData);
       if (!updatedUser) {
         return res.status(400).json({ success: false, error: "Gagal memperbarui profil" });
       }
 
       return res.status(200).json({ success: true, data: updatedUser });
+
     } catch (error) {
       console.error("Kesalahan saat memperbarui profil:", error);
       return res.status(500).json({ success: false, error: "Internal server error" });

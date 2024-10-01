@@ -104,7 +104,7 @@ router.delete("/deleteCart/:id", authUser, async (req, res) => {
   }
 });
 
-router.delete("/clearCart", authUser, async (req, res) => {
+router.delete("/clearCartUser", authUser, async (req, res) => {
   try {
     // Menghapus semua item dari keranjang berdasarkan user yang sedang login
     await Cart.deleteMany({ user: req.user });
